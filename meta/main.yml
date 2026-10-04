@@ -4,13 +4,14 @@
 
 galaxy_info:
   author: Jonas Mauer
-  description: Ansible role for managing Samba AD users, groups, organizational units, and DNS reservations.
+  description: Ansible role for managing Samba AD users, groups, organizational units, DNS zones, and static records.
   galaxy_tags:
     - samba
     - activedirectory
     - users
     - groups
     - ldap
+    - dns
   issue_tracker_url: https://github.com/jomrr/ansible-role-samba_ad/issues
   license: MIT
   min_ansible_version: "2.20"

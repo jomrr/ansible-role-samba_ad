@@ -17,6 +17,46 @@
 # DNS names reserved with administrator-owned loopback A records; [] stops management.
 samba_ad_dns_reserved_names: [wpad, isatap]
 
+# AD-integrated DNS zones; removing an entry stops management, state: absent deletes all its records.
+samba_ad_dns_zones: []
+# Example:
+# samba_ad_dns_zones:
+#   - name: apps.example.com  # Required zone name; reverse zones use in-addr.arpa or ip6.arpa.
+#     state: present  # present (default) or absent; remove record declarations for deleted zones.
+#     replication: domain  # domain (default) or forest; used only at creation.
+#     aging: false  # Optional boolean; omitted leaves aging unmanaged.
+#     norefresh_interval: 168  # Optional hours; 0 selects the DC default, omitted leaves it unmanaged.
+#     refresh_interval: 168  # Optional hours; 0 selects the DC default, omitted leaves it unmanaged.
+#   - name: 2.0.192.in-addr.arpa
+#     replication: forest
+
+# Individual static DNS records; unlisted values remain, state: absent deletes only the specified value.
+samba_ad_dns_records: []
+# Example:
+# samba_ad_dns_records:
+#   - zone: apps.example.com  # Required zone; must exist when the record task runs, also in check mode.
+#     name: mail  # Required relative name; @ means the zone root.
+#     type: A  # Required; A, AAAA, CNAME, PTR, MX, NS, SRV, or TXT.
+#     value: 192.0.2.10  # Required address, target hostname, or text.
+#     state: present  # present (default) or absent; replace values with old absent and new present.
+#     ttl: 900  # Seconds (default 900); updated in place on an existing record.
+#   - zone: 2.0.192.in-addr.arpa
+#     name: '10'
+#     type: PTR
+#     value: mail.apps.example.com  # PTR records must be declared explicitly.
+#   - zone: apps.example.com
+#     name: '@'
+#     type: MX
+#     value: mail.apps.example.com
+#     preference: 10  # Required integer for MX.
+#   - zone: apps.example.com
+#     name: _submission._tcp
+#     type: SRV
+#     value: mail.apps.example.com
+#     priority: 0  # Required integer for SRV.
+#     weight: 100  # Required integer for SRV.
+#     port: 587  # Required integer for SRV.
+
 # Organizational units in parent-before-child order; absent OUs are removed in reverse order.
 # Removing an entry stops management; state: absent deletes only an empty OU.
 samba_ad_ous: []

@@ -2,7 +2,7 @@
 # role: samba_ad
 # file: molecule/resources/playbooks/converge.yml
 
-- name: SAMBA_AD | Converge directory objects
+- name: SAMBA_AD | Converge directory objects and DNS
   hosts: all
   gather_facts: false
   roles:

@@ -6,14 +6,16 @@
 [![dev](https://img.shields.io/github/actions/workflow/status/jomrr/ansible-role-samba_ad/dev.yml?branch=dev&label=dev)](https://github.com/jomrr/ansible-role-samba_ad/actions/workflows/dev.yml?query=branch%3Adev)
 [![main](https://img.shields.io/github/actions/workflow/status/jomrr/ansible-role-samba_ad/main.yml?branch=main&label=main)](https://github.com/jomrr/ansible-role-samba_ad/actions/workflows/main.yml?query=branch%3Amain)
 
-Ansible role for managing Samba AD users, groups, organizational units, and DNS
-reservations.
+Ansible role for managing Samba AD users, groups, organizational units, DNS
+zones, and static records.
 
 ## Scope
 
 ### Managed
 
 - Reserved DNS names.
+- AD-integrated forward and reverse DNS zones, aging options, and individual
+  static DNS records.
 - Domain users, organizational units, groups, and additive or authoritative
   group memberships.
 
@@ -22,6 +24,7 @@ reservations.
 - DC installation, provisioning, joins, and service configuration.
 - Windows LAPS schema and delegation.
 - Domain password policies and Password Settings Objects (PSOs).
+- Automatic PTR creation and replacement of complete DNS record sets.
 
 ## Requirements
 
@@ -30,6 +33,7 @@ reservations.
 - Administrator credentials supplied through Ansible Vault or another secret
   store.
 - RFC2307 enabled in the domain when managing POSIX attributes.
+- jomrr.samba >=2.1.0 for zone aging options and record TTL management.
 
 ## Dependencies
 
@@ -38,7 +42,7 @@ collections:
   - name: community.general
     version: '>=12.0.0'
   - name: jomrr.samba
-    version: '>=1.0.1'
+    version: '>=2.1.0'
 ```
 
 ## Role Variables
@@ -75,6 +79,30 @@ Default:
 samba_ad_dns_reserved_names:
   - wpad
   - isatap
+```
+
+### `samba_ad_dns_zones`
+
+Type: `list`. Required: `false`.
+
+AD-integrated forward or reverse DNS zones; omitted entries are left unmanaged.
+
+Default:
+
+```yaml
+samba_ad_dns_zones: []
+```
+
+### `samba_ad_dns_records`
+
+Type: `list`. Required: `false`.
+
+Individual static DNS records; other values at the same name are preserved.
+
+Default:
+
+```yaml
+samba_ad_dns_records: []
 ```
 
 ### `samba_ad_ous`
@@ -142,7 +170,10 @@ samba_ad_group_members_purge: false
 
 ## Check Mode
 
-Check mode previews changes to an existing domain.
+Check mode previews changes to an existing domain. DNS record checks require an
+existing zone: a zone predicted for creation is not available to subsequent
+record tasks in check mode. A normal run can create new zones and their records
+together.
 
 ## Security Notes
 
@@ -153,9 +184,26 @@ Check mode previews changes to an existing domain.
 
 ## Operational Notes
 
-- Directory operations authenticate as Administrator using
+- Directory and DNS operations authenticate as Administrator using
   samba_ad_admin_password against samba_ad_server. Run the role once per domain;
   AD replicates the resulting changes to other DCs.
+- samba_ad_dns_zones and samba_ad_dns_records default to empty lists. Zones are
+  managed first, followed by DNS reservations and static records, before
+  directory objects. Forward and reverse zones are selected by their names.
+  replication accepts domain (default) or forest and applies only when creating
+  a zone. Omitted aging, norefresh_interval, and refresh_interval settings
+  remain unmanaged; intervals are in hours, with 0 selecting the DC default.
+  Supply aging options only with state: present.
+- Records support A, AAAA, CNAME, PTR, MX, NS, SRV, and TXT. name is relative to
+  zone; @ means the zone root. MX requires preference; SRV requires priority,
+  weight, and port. ttl defaults to 900 seconds and is updated on the existing
+  record. PTR records must be declared separately.
+- Removing a DNS list entry stops management and preserves the object. state:
+  absent explicitly deletes it. Records are managed individually, preserving
+  other values at the same name. To replace a value, declare the old value
+  absent and the new value present. Deleting a zone removes all its records;
+  remove all separate record declarations for that zone, including absent
+  entries. DNS reservations also require their domain zone to remain present.
 - samba_ad_ous, samba_ad_users, and samba_ad_groups manage only listed objects.
   Removing an item stops management; state: absent explicitly deletes it. List
   OUs in parent-before-child order. Empty OUs marked absent are removed in
@@ -191,7 +239,7 @@ Check mode previews changes to an existing domain.
 ```yaml
 ---
 
-- name: SAMBA_AD | Manage directory objects
+- name: SAMBA_AD | Manage directory objects and DNS
   hosts: dc1
   gather_facts: false
   roles:
@@ -200,6 +248,59 @@ Check mode previews changes to an existing domain.
       samba_ad_realm: AD.EXAMPLE.COM
       samba_ad_admin_password: "{{ vault_samba_ad_admin_password }}"
 
+```
+
+### Manage forward and reverse DNS
+
+```yaml
+samba_ad_dns_zones:
+  - name: apps.example.com
+    replication: domain
+    aging: false
+    norefresh_interval: 168
+    refresh_interval: 168
+  - name: 2.0.192.in-addr.arpa
+    replication: forest
+samba_ad_dns_records:
+  - zone: apps.example.com
+    name: mail
+    type: A
+    value: 192.0.2.10
+    ttl: 3600
+  - zone: 2.0.192.in-addr.arpa
+    name: '10'
+    type: PTR
+    value: mail.apps.example.com
+  - zone: apps.example.com
+    name: '@'
+    type: MX
+    value: mail.apps.example.com
+    preference: 10
+  - zone: apps.example.com
+    name: _submission._tcp
+    type: SRV
+    value: mail.apps.example.com
+    priority: 0
+    weight: 100
+    port: 587
+```
+
+### Replace one DNS value
+
+Other values at the same name remain unchanged.
+
+```yaml
+samba_ad_dns_records:
+  - zone: apps.example.com
+    name: mail
+    type: A
+    value: 192.0.2.10
+    state: absent
+  - zone: apps.example.com
+    name: mail
+    type: A
+    value: 192.0.2.20
+    ttl: 3600
 ```
 
 ### Manage directory objects

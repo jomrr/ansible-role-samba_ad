@@ -6,6 +6,11 @@
   hosts: all
   gather_facts: true
   module_defaults:
+    group/jomrr.samba.all:
+      server: "{{ samba_ad_server }}"
+      realm: "{{ samba_ad_realm }}"
+      bind_username: Administrator
+      bind_password: "{{ samba_ad_admin_password }}"
     samba_ad_test_objects:
       server: dc1.ad.example.test
       realm: "{{ samba_ad_realm }}"
@@ -22,6 +27,34 @@
         apply:
           check_mode: true
       vars: &__samba_ad_updated_inputs
+        samba_ad_dns_zones:
+          - name: dns.molecule.test
+            aging: true
+            norefresh_interval: 48
+            refresh_interval: 72
+          - name: 2.0.192.in-addr.arpa
+          - name: retired.molecule.test
+            state: absent
+        samba_ad_dns_records:
+          - zone: dns.molecule.test
+            name: www
+            type: A
+            value: 192.0.2.10
+            state: absent
+          - zone: dns.molecule.test
+            name: www
+            type: A
+            value: 192.0.2.12
+          - zone: dns.molecule.test
+            name: mail
+            type: A
+            value: 192.0.2.20
+            ttl: 3600
+          - zone: dns.molecule.test
+            name: remove
+            type: TXT
+            value: retired record
+            state: absent
         samba_ad_group_members_purge: true
         samba_ad_ous:
 
@@ -77,6 +110,11 @@
       samba_ad_test_objects:
         phase: seeded
 
+    - name: SAMBA_AD | Verify check mode preserved DNS state
+      ansible.builtin.import_tasks: tasks/verify_dns.yml
+      vars:
+        __samba_ad_dns_updated: false
+
     - name: SAMBA_AD | Apply updates and deletions
       ansible.builtin.include_role:
         name: "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}"
@@ -85,3 +123,8 @@
     - name: SAMBA_AD | Verify updated and deleted objects
       samba_ad_test_objects:
         phase: updated
+
+    - name: SAMBA_AD | Verify updated and deleted DNS objects
+      ansible.builtin.import_tasks: tasks/verify_dns.yml
+      vars:
+        __samba_ad_dns_updated: true

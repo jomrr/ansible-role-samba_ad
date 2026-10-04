@@ -2,7 +2,7 @@
 # role: samba_ad
 # file: tasks/main.yml
 
-- name: SAMBA_AD | Configure domain directory objects
+- name: SAMBA_AD | Configure domain directory objects and DNS
   ansible.builtin.import_tasks: directory.yml
   module_defaults:
     group/jomrr.samba.all:

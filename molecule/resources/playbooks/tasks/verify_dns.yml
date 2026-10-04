@@ -1,0 +1,147 @@
+---
+# role: samba_ad
+# file: molecule/resources/playbooks/tasks/verify_dns.yml
+
+- name: SAMBA_AD | Read the managed forward zone
+  jomrr.samba.samba_dns_zone_info:
+    name: dns.molecule.test
+  register: __samba_ad_forward_zone
+
+- name: SAMBA_AD | Read the managed reverse zone
+  jomrr.samba.samba_dns_zone_info:
+    name: 2.0.192.in-addr.arpa
+  register: __samba_ad_reverse_zone
+
+- name: SAMBA_AD | Read the zone scheduled for deletion
+  jomrr.samba.samba_dns_zone_info:
+    name: retired.molecule.test
+  register: __samba_ad_retired_zone
+
+- name: SAMBA_AD | Verify zone options, replication, and deletion
+  ansible.builtin.assert:
+    that:
+      - __samba_ad_forward_zone.zones | length == 1
+      - __samba_ad_forward_zone.zones[0].replication == 'domain'
+      - not __samba_ad_forward_zone.zones[0].reverse
+      - __samba_ad_forward_zone.zones[0].aging == __samba_ad_dns_updated
+      - __samba_ad_forward_zone.zones[0].norefresh_interval == (48 if __samba_ad_dns_updated else 24)
+      - __samba_ad_forward_zone.zones[0].refresh_interval == (72 if __samba_ad_dns_updated else 36)
+      - __samba_ad_reverse_zone.zones | length == 1
+      - __samba_ad_reverse_zone.zones[0].replication == 'forest'
+      - __samba_ad_reverse_zone.zones[0].reverse
+      - not __samba_ad_reverse_zone.zones[0].aging
+      - __samba_ad_reverse_zone.zones[0].norefresh_interval == 12
+      - __samba_ad_reverse_zone.zones[0].refresh_interval == 18
+      - __samba_ad_retired_zone.zones | length == (0 if __samba_ad_dns_updated else 1)
+    quiet: true
+
+- name: SAMBA_AD | Read records in new and pre-existing zones
+  jomrr.samba.samba_dns_record_info:
+    zone: "{{ __samba_ad_test_zone }}"
+  loop:
+    - dns.molecule.test
+    - 2.0.192.in-addr.arpa
+    - ad.example.test
+  loop_control:
+    loop_var: __samba_ad_test_zone
+  register: __samba_ad_zone_records
+
+- name: SAMBA_AD | Verify static values, TTLs, structured fields, and unlisted records
+  ansible.builtin.assert:
+    that:
+      - __samba_ad_expected_record in (__samba_ad_zone_records.results | map(attribute='records') | flatten)
+    quiet: true
+  loop:
+    - zone: dns.molecule.test
+      name: www
+      type: A
+      value: "{{ '192.0.2.12' if __samba_ad_dns_updated else '192.0.2.10' }}"
+      ttl: 900
+    - zone: dns.molecule.test
+      name: www
+      type: A
+      value: 192.0.2.11
+      ttl: 900
+    - zone: dns.molecule.test
+      name: mail
+      type: A
+      value: 192.0.2.20
+      ttl: "{{ 3600 if __samba_ad_dns_updated else 1200 }}"
+    - zone: 2.0.192.in-addr.arpa
+      name: '20'
+      type: PTR
+      value: mail.dns.molecule.test
+      ttl: 900
+    - zone: dns.molecule.test
+      name: '@'
+      type: MX
+      value: mail.dns.molecule.test
+      preference: 10
+      ttl: 900
+    - zone: dns.molecule.test
+      name: _submission._tcp
+      type: SRV
+      value: mail.dns.molecule.test
+      priority: 5
+      weight: 20
+      port: 587
+      ttl: 900
+    - zone: ad.example.test
+      name: dns-fixture
+      type: A
+      value: 192.0.2.30
+      ttl: 900
+  loop_control:
+    loop_var: __samba_ad_expected_record
+    label: "{{ __samba_ad_expected_record.zone }}/{{ __samba_ad_expected_record.name }} {{ __samba_ad_expected_record.type }}"
+
+- name: SAMBA_AD | Verify explicit record deletion and replacement
+  ansible.builtin.assert:
+    that:
+      - >-
+        __samba_ad_zone_records.results[0].records | selectattr('name', 'equalto', 'www')
+        | selectattr('type', 'equalto', 'A') | list | length == 2
+      - >-
+        __samba_ad_zone_records.results[0].records | selectattr('name', 'equalto', 'remove')
+        | list | length == (0 if __samba_ad_dns_updated else 1)
+    quiet: true
+
+- name: SAMBA_AD | Query forward, reverse, and structured DNS answers
+  ansible.builtin.command:
+    argv:
+      - dig
+      - '@127.0.0.1'
+      - +short
+      - "{{ __samba_ad_dns_query.name }}"
+      - "{{ __samba_ad_dns_query.type }}"
+  changed_when: false
+  loop:
+    - name: www.dns.molecule.test
+      type: A
+      answers: "{{ ['192.0.2.11', '192.0.2.12'] if __samba_ad_dns_updated else ['192.0.2.10', '192.0.2.11'] }}"
+    - name: 20.2.0.192.in-addr.arpa
+      type: PTR
+      answers:
+        - mail.dns.molecule.test.
+    - name: dns.molecule.test
+      type: MX
+      answers:
+        - 10 mail.dns.molecule.test.
+    - name: _submission._tcp.dns.molecule.test
+      type: SRV
+      answers:
+        - 5 20 587 mail.dns.molecule.test.
+  loop_control:
+    loop_var: __samba_ad_dns_query
+    label: "{{ __samba_ad_dns_query.name }} {{ __samba_ad_dns_query.type }}"
+  register: __samba_ad_dns_answers
+
+- name: SAMBA_AD | Verify DNS responses
+  ansible.builtin.assert:
+    that:
+      - __samba_ad_dns_answer.stdout_lines | sort == __samba_ad_dns_answer.__samba_ad_dns_query.answers | sort
+    quiet: true
+  loop: "{{ __samba_ad_dns_answers.results }}"
+  loop_control:
+    loop_var: __samba_ad_dns_answer
+    label: "{{ __samba_ad_dns_answer.__samba_ad_dns_query.name }} {{ __samba_ad_dns_answer.__samba_ad_dns_query.type }}"

@@ -1,0 +1,45 @@
+---
+# role: samba_ad
+# file: tasks/dns.yml
+
+- name: SAMBA_AD | Manage DNS zones
+  jomrr.samba.samba_dns_zone:
+    name: "{{ __samba_ad_dns_zone.name }}"
+    state: "{{ __samba_ad_dns_zone.state | default(omit) }}"
+    replication: "{{ __samba_ad_dns_zone.replication | default(omit) }}"
+    aging: "{{ __samba_ad_dns_zone.aging | default(omit) }}"
+    norefresh_interval: "{{ __samba_ad_dns_zone.norefresh_interval | default(omit) }}"
+    refresh_interval: "{{ __samba_ad_dns_zone.refresh_interval | default(omit) }}"
+  loop: "{{ samba_ad_dns_zones }}"
+  loop_control:
+    loop_var: __samba_ad_dns_zone
+    label: "{{ __samba_ad_dns_zone.name }}"
+
+- name: SAMBA_AD | Reserve DNS names against client registration
+  jomrr.samba.samba_dns_record:
+    zone: "{{ samba_ad_realm | lower }}"
+    name: "{{ __samba_ad_reserved_name }}"
+    type: A
+    value: 127.0.0.1
+    state: present
+  loop: "{{ samba_ad_dns_reserved_names }}"
+  loop_control:
+    loop_var: __samba_ad_reserved_name
+    label: "{{ __samba_ad_reserved_name }}"
+
+- name: SAMBA_AD | Manage static DNS records
+  jomrr.samba.samba_dns_record:
+    zone: "{{ __samba_ad_dns_record.zone }}"
+    name: "{{ __samba_ad_dns_record.name }}"
+    type: "{{ __samba_ad_dns_record.type }}"
+    value: "{{ __samba_ad_dns_record.value }}"
+    state: "{{ __samba_ad_dns_record.state | default(omit) }}"
+    ttl: "{{ __samba_ad_dns_record.ttl | default(omit) }}"
+    preference: "{{ __samba_ad_dns_record.preference | default(omit) }}"
+    priority: "{{ __samba_ad_dns_record.priority | default(omit) }}"
+    weight: "{{ __samba_ad_dns_record.weight | default(omit) }}"
+    port: "{{ __samba_ad_dns_record.port | default(omit) }}"
+  loop: "{{ samba_ad_dns_records }}"
+  loop_control:
+    loop_var: __samba_ad_dns_record
+    label: "{{ __samba_ad_dns_record.zone }}/{{ __samba_ad_dns_record.name }} {{ __samba_ad_dns_record.type }} {{ __samba_ad_dns_record.value }}"

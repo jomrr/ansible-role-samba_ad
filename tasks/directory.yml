@@ -2,16 +2,8 @@
 # role: samba_ad
 # file: tasks/directory.yml
 
-- name: SAMBA_AD | Reserve DNS names against client registration
-  jomrr.samba.samba_dns_record:
-    zone: "{{ samba_ad_realm | lower }}"
-    name: "{{ __samba_ad_reserved_name }}"
-    type: A
-    value: 127.0.0.1
-    state: present
-  loop: "{{ samba_ad_dns_reserved_names }}"
-  loop_control:
-    loop_var: __samba_ad_reserved_name
+- name: SAMBA_AD | Manage DNS zones, reservations, and static records
+  ansible.builtin.import_tasks: dns.yml
 
 - name: SAMBA_AD | Create organizational units in parent-before-child order
   jomrr.samba.samba_ou:

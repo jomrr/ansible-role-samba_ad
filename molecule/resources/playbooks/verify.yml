@@ -2,10 +2,35 @@
 # role: samba_ad
 # file: molecule/resources/playbooks/verify.yml
 
-- name: SAMBA_AD | Verify directory objects
+- name: SAMBA_AD | Verify directory objects and DNS
   hosts: all
   gather_facts: false
+  module_defaults:
+    group/jomrr.samba.all:
+      server: "{{ samba_ad_server }}"
+      realm: "{{ samba_ad_realm }}"
+      bind_username: Administrator
+      bind_password: "{{ samba_ad_admin_password }}"
   tasks:
+    - name: SAMBA_AD | Verify initial DNS state
+      ansible.builtin.import_tasks: tasks/verify_dns.yml
+      vars:
+        __samba_ad_dns_updated: false
+
+    - name: SAMBA_AD | Read the record in the zone scheduled for deletion
+      jomrr.samba.samba_dns_record_info:
+        zone: retired.molecule.test
+        name: '@'
+        type: TXT
+      register: __samba_ad_retired_zone_records
+
+    - name: SAMBA_AD | Verify the zone scheduled for deletion is populated
+      ansible.builtin.assert:
+        that:
+          - __samba_ad_retired_zone_records.records | length == 1
+          - __samba_ad_retired_zone_records.records[0].value == 'zone cleanup'
+        quiet: true
+
     - name: SAMBA_AD | Verify managed directory objects and nested memberships
       samba_ad_test_objects:
         server: dc1.ad.example.test

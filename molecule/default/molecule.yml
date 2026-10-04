@@ -23,6 +23,59 @@ provisioner:
     group_vars:
       all:
         ansible_podman_mount_detection: false
+        samba_ad_dns_zones:
+          - name: "dns.molecule.test"
+            aging: false
+            norefresh_interval: 24
+            refresh_interval: 36
+          - name: "2.0.192.in-addr.arpa"
+            replication: "forest"
+            aging: false
+            norefresh_interval: 12
+            refresh_interval: 18
+          - name: "retired.molecule.test"
+        samba_ad_dns_records:
+          - zone: "dns.molecule.test"
+            name: "www"
+            type: "A"
+            value: "192.0.2.10"
+          - zone: "dns.molecule.test"
+            name: "www"
+            type: "A"
+            value: "192.0.2.11"
+          - zone: "dns.molecule.test"
+            name: "mail"
+            type: "A"
+            value: "192.0.2.20"
+            ttl: 1200
+          - zone: "2.0.192.in-addr.arpa"
+            name: "20"
+            type: "PTR"
+            value: "mail.dns.molecule.test"
+          - zone: "dns.molecule.test"
+            name: "@"
+            type: "MX"
+            value: "mail.dns.molecule.test"
+            preference: 10
+          - zone: "dns.molecule.test"
+            name: "_submission._tcp"
+            type: "SRV"
+            value: "mail.dns.molecule.test"
+            priority: 5
+            weight: 20
+            port: 587
+          - zone: "dns.molecule.test"
+            name: "remove"
+            type: "TXT"
+            value: "retired record"
+          - zone: "ad.example.test"
+            name: "dns-fixture"
+            type: "A"
+            value: "192.0.2.30"
+          - zone: "retired.molecule.test"
+            name: "@"
+            type: "TXT"
+            value: "zone cleanup"
         samba_ad_ous:
           - name: "Molecule"
             path: "DC=ad,DC=example,DC=test"

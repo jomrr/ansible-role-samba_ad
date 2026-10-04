@@ -4,7 +4,7 @@
 
 argument_specs:
   main:
-    short_description: Manage directory objects in an existing Samba AD domain.
+    short_description: Manage directory objects and DNS in a Samba AD domain.
     options:
       samba_ad_server:
         type: str
@@ -28,6 +28,99 @@ argument_specs:
           - isatap
         description: DNS names reserved with administrator-owned loopback A records; an
           empty list stops management.
+      samba_ad_dns_zones:
+        type: list
+        elements: dict
+        default: []
+        description: AD-integrated forward or reverse DNS zones; omitted entries are left
+          unmanaged.
+        options:
+          name:
+            type: str
+            required: true
+            description: DNS zone name; in-addr.arpa and ip6.arpa names create reverse zones.
+          state:
+            type: str
+            default: present
+            choices:
+              - present
+              - absent
+            description: Whether the zone exists; absent deletes the zone and all its records.
+          replication:
+            type: str
+            default: domain
+            choices:
+              - domain
+              - forest
+            description: Replication scope used when creating the zone; existing zones retain
+              their scope.
+          aging:
+            type: bool
+            description: Enable or disable record aging; omitted leaves the setting unmanaged.
+          norefresh_interval:
+            type: int
+            description: No-refresh interval in hours (0 selects the DC default); omitted
+              leaves it unmanaged.
+          refresh_interval:
+            type: int
+            description: Refresh interval in hours (0 selects the DC default); omitted leaves
+              it unmanaged.
+      samba_ad_dns_records:
+        type: list
+        elements: dict
+        default: []
+        description: Individual static DNS records; other values at the same name are preserved.
+        options:
+          zone:
+            type: str
+            required: true
+            description: Zone containing the record; must exist when the record task runs.
+          name:
+            type: str
+            required: true
+            description: Record name relative to the zone; use @ for the zone root.
+          type:
+            type: str
+            required: true
+            choices:
+              - A
+              - AAAA
+              - CNAME
+              - PTR
+              - MX
+              - NS
+              - SRV
+              - TXT
+            description: DNS record type.
+          value:
+            type: str
+            required: true
+            description: Address, target hostname, or text; changing a value requires explicitly
+              removing the old record.
+          state:
+            type: str
+            default: present
+            choices:
+              - present
+              - absent
+            description: Whether this individual record exists; absent explicitly deletes
+              only this value.
+          ttl:
+            type: int
+            default: 900
+            description: Record TTL in seconds; updated in place for an existing record.
+          preference:
+            type: int
+            description: MX preference; required for MX records.
+          priority:
+            type: int
+            description: SRV priority; required for SRV records.
+          weight:
+            type: int
+            description: SRV weight; required for SRV records.
+          port:
+            type: int
+            description: SRV port; required for SRV records.
       samba_ad_ous:
         type: list
         elements: dict
