@@ -1,12 +1,12 @@
 ---
-# role: samba_ad_objects
+# role: samba_ad
 # file: tasks/main.yml
 
-- name: SAMBA_AD_OBJECTS | Configure domain directory objects
+- name: SAMBA_AD | Configure domain directory objects
   ansible.builtin.import_tasks: directory.yml
   module_defaults:
     group/jomrr.samba.all:
-      server: "{{ samba_ad_objects_server }}"
-      realm: "{{ samba_ad_objects_realm | upper }}"
+      server: "{{ samba_ad_server }}"
+      realm: "{{ samba_ad_realm | upper }}"
       bind_username: Administrator
-      bind_password: "{{ samba_ad_objects_admin_password }}"
+      bind_password: "{{ samba_ad_admin_password }}"

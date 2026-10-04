@@ -1,10 +1,10 @@
-# Ansible Role: samba_ad_objects
+# Ansible Role: samba_ad
 
-![GitHub](https://img.shields.io/github/license/jomrr/ansible-role-samba_ad_objects)
-![GitHub last commit](https://img.shields.io/github/last-commit/jomrr/ansible-role-samba_ad_objects)
-![GitHub issues](https://img.shields.io/github/issues-raw/jomrr/ansible-role-samba_ad_objects)
-[![dev](https://img.shields.io/github/actions/workflow/status/jomrr/ansible-role-samba_ad_objects/dev.yml?branch=dev&label=dev)](https://github.com/jomrr/ansible-role-samba_ad_objects/actions/workflows/dev.yml?query=branch%3Adev)
-[![main](https://img.shields.io/github/actions/workflow/status/jomrr/ansible-role-samba_ad_objects/main.yml?branch=main&label=main)](https://github.com/jomrr/ansible-role-samba_ad_objects/actions/workflows/main.yml?query=branch%3Amain)
+![GitHub](https://img.shields.io/github/license/jomrr/ansible-role-samba_ad)
+![GitHub last commit](https://img.shields.io/github/last-commit/jomrr/ansible-role-samba_ad)
+![GitHub issues](https://img.shields.io/github/issues-raw/jomrr/ansible-role-samba_ad)
+[![dev](https://img.shields.io/github/actions/workflow/status/jomrr/ansible-role-samba_ad/dev.yml?branch=dev&label=dev)](https://github.com/jomrr/ansible-role-samba_ad/actions/workflows/dev.yml?query=branch%3Adev)
+[![main](https://img.shields.io/github/actions/workflow/status/jomrr/ansible-role-samba_ad/main.yml?branch=main&label=main)](https://github.com/jomrr/ansible-role-samba_ad/actions/workflows/main.yml?query=branch%3Amain)
 
 Ansible role for managing Samba AD users, groups, organizational units, and DNS
 reservations.
@@ -43,26 +43,26 @@ collections:
 
 ## Role Variables
 
-### `samba_ad_objects_server`
+### `samba_ad_server`
 
 Type: `str`. Required: `true`.
 
 DNS hostname of the existing Samba AD domain controller.
 
-### `samba_ad_objects_realm`
+### `samba_ad_realm`
 
 Type: `str`. Required: `true`.
 
 Kerberos realm of the existing domain.
 
-### `samba_ad_objects_admin_password`
+### `samba_ad_admin_password`
 
 Type: `str`. Required: `true`.
 
 Administrator password for directory operations, supplied through a secret
 store.
 
-### `samba_ad_objects_dns_reserved_names`
+### `samba_ad_dns_reserved_names`
 
 Type: `list`. Required: `false`.
 
@@ -72,12 +72,12 @@ stops management.
 Default:
 
 ```yaml
-samba_ad_objects_dns_reserved_names:
+samba_ad_dns_reserved_names:
   - wpad
   - isatap
 ```
 
-### `samba_ad_objects_ous`
+### `samba_ad_ous`
 
 Type: `list`. Required: `false`.
 
@@ -87,10 +87,10 @@ and requires empty OUs.
 Default:
 
 ```yaml
-samba_ad_objects_ous: []
+samba_ad_ous: []
 ```
 
-### `samba_ad_objects_users`
+### `samba_ad_users`
 
 Type: `list`. Required: `false`.
 
@@ -99,10 +99,10 @@ Domain user accounts; omitted entries are left unmanaged.
 Default:
 
 ```yaml
-samba_ad_objects_users: []
+samba_ad_users: []
 ```
 
-### `samba_ad_objects_groups`
+### `samba_ad_groups`
 
 Type: `list`. Required: `false`.
 
@@ -112,10 +112,10 @@ nested memberships.
 Default:
 
 ```yaml
-samba_ad_objects_groups: []
+samba_ad_groups: []
 ```
 
-### `samba_ad_objects_user_update_password`
+### `samba_ad_user_update_password`
 
 Type: `str`. Required: `false`.
 
@@ -125,10 +125,10 @@ run. Overridable per user.
 Default:
 
 ```yaml
-samba_ad_objects_user_update_password: on_create
+samba_ad_user_update_password: on_create
 ```
 
-### `samba_ad_objects_group_members_purge`
+### `samba_ad_group_members_purge`
 
 Type: `bool`. Required: `false`.
 
@@ -137,7 +137,7 @@ Remove unlisted group members when members is supplied; overridable per group.
 Default:
 
 ```yaml
-samba_ad_objects_group_members_purge: false
+samba_ad_group_members_purge: false
 ```
 
 ## Check Mode
@@ -147,32 +147,32 @@ Check mode previews changes to an existing domain.
 ## Security Notes
 
 - The role reserves wpad and isatap as administrator-owned A records pointing to
-  127.0.0.1. Configure samba_ad_objects_dns_reserved_names to select the names;
-  removing a name stops management and preserves the record. Existing record
-  ownership and ACLs are not changed.
+  127.0.0.1. Configure samba_ad_dns_reserved_names to select the names; removing
+  a name stops management and preserves the record. Existing record ownership
+  and ACLs are not changed.
 
 ## Operational Notes
 
 - Directory operations authenticate as Administrator using
-  samba_ad_objects_admin_password against samba_ad_objects_server. Run the role
-  once per domain; AD replicates the resulting changes to other DCs.
-- samba_ad_objects_ous, samba_ad_objects_users, and samba_ad_objects_groups
-  manage only listed objects. Removing an item stops management; state: absent
-  explicitly deletes it. List OUs in parent-before-child order. Empty OUs marked
-  absent are removed in reverse order after users and groups are managed. OU
-  deletion never removes unlisted child objects recursively.
+  samba_ad_admin_password against samba_ad_server. Run the role once per domain;
+  AD replicates the resulting changes to other DCs.
+- samba_ad_ous, samba_ad_users, and samba_ad_groups manage only listed objects.
+  Removing an item stops management; state: absent explicitly deletes it. List
+  OUs in parent-before-child order. Empty OUs marked absent are removed in
+  reverse order after users and groups are managed. OU deletion never removes
+  unlisted child objects recursively.
 - All groups are created before membership is reconciled, so nested groups may
   appear in any order. Omitted members leaves membership unmanaged.
-  samba_ad_objects_group_members_purge defaults to false (additive); true makes
-  a supplied members list authoritative. Each group may override members_purge.
-  An empty members list removes all members only in authoritative mode.
+  samba_ad_group_members_purge defaults to false (additive); true makes a
+  supplied members list authoritative. Each group may override members_purge. An
+  empty members list removes all members only in authoritative mode.
 - New users require a password supplied through a secret store.
-  samba_ad_objects_user_update_password defaults to on_create and may be
-  overridden per user with update_password. always deliberately resets a
-  supplied password on every run and is not idempotent. Optional user and group
-  attributes remain unchanged when omitted, except enabled, scope, category, and
-  location, which use the documented module defaults. Omitted path places or
-  moves users and groups to the default Users container.
+  samba_ad_user_update_password defaults to on_create and may be overridden per
+  user with update_password. always deliberately resets a supplied password on
+  every run and is not idempotent. Optional user and group attributes remain
+  unchanged when omitted, except enabled, scope, category, and location, which
+  use the documented module defaults. Omitted path places or moves users and
+  groups to the default Users container.
 
 ## Supported Platforms
 
@@ -191,14 +191,14 @@ Check mode previews changes to an existing domain.
 ```yaml
 ---
 
-- name: SAMBA_AD_OBJECTS | Manage directory objects
+- name: SAMBA_AD | Manage directory objects
   hosts: dc1
   gather_facts: false
   roles:
-    - role: jomrr.samba_ad_objects
-      samba_ad_objects_server: dc1.ad.example.com
-      samba_ad_objects_realm: AD.EXAMPLE.COM
-      samba_ad_objects_admin_password: "{{ vault_samba_ad_admin_password }}"
+    - role: jomrr.samba_ad
+      samba_ad_server: dc1.ad.example.com
+      samba_ad_realm: AD.EXAMPLE.COM
+      samba_ad_admin_password: "{{ vault_samba_ad_admin_password }}"
 
 ```
 
@@ -209,21 +209,21 @@ Group entries support `name`, `path`, `scope`, `category`, `description`,
 `global` (default), `domain_local`, or `universal`; `category` accepts
 `security` (default) or `distribution`. All user and OU object options are
 exposed in the role argument schema as well. Directory operations use
-Administrator and `samba_ad_objects_admin_password` against the configured DC.
+Administrator and `samba_ad_admin_password` against the configured DC.
 
 ```yaml
-samba_ad_objects_ous:
+samba_ad_ous:
   - name: Staff
     path: DC=ad,DC=example,DC=com
   - name: Engineering
     path: OU=Staff,DC=ad,DC=example,DC=com
-samba_ad_objects_users:
+samba_ad_users:
   - username: jdoe
     path: OU=Engineering,OU=Staff,DC=ad,DC=example,DC=com
     given_name: Jane
     surname: Doe
     password: "{{ vault_jdoe_password }}"
-samba_ad_objects_groups:
+samba_ad_groups:
   - name: engineers
     path: OU=Engineering,OU=Staff,DC=ad,DC=example,DC=com
     members: [jdoe]

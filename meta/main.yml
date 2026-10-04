@@ -1,5 +1,5 @@
 ---
-# role: samba_ad_objects
+# role: samba_ad
 # file: meta/main.yml
 
 galaxy_info:
@@ -11,8 +11,8 @@ galaxy_info:
     - users
     - groups
     - ldap
-  issue_tracker_url: https://github.com/jomrr/ansible-role-samba_ad_objects/issues
+  issue_tracker_url: https://github.com/jomrr/ansible-role-samba_ad/issues
   license: MIT
   min_ansible_version: "2.20"
   namespace: jomrr
-  role_name: samba_ad_objects
+  role_name: samba_ad

@@ -1,5 +1,5 @@
 ---
-# role: samba_ad_objects
+# role: samba_ad
 # file: .github/workflows/main.yml
 
 name: main full gate
@@ -85,28 +85,31 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: samba_ad_objects-almalinux-latest
+          - name: samba_ad-almalinux-latest
             uns: jomrr
             img: almalinux
             tag: latest
-          - name: samba_ad_objects-debian-latest
+          - name: samba_ad-debian-latest
             uns: jomrr
             img: debian
             tag: latest
-          - name: samba_ad_objects-fedora-latest
+          - name: samba_ad-fedora-latest
             uns: jomrr
             img: fedora
             tag: latest
-          - name: samba_ad_objects-opensuse-tumbleweed-latest
+          - name: samba_ad-opensuse-tumbleweed-latest
             uns: jomrr
             img: opensuse-tumbleweed
             tag: latest
-          - name: samba_ad_objects-ubuntu-latest
+          - name: samba_ad-ubuntu-latest
             uns: jomrr
             img: ubuntu
             tag: latest
 
     steps:
+      - name: Disable AppArmor profile(s) for Molecule
+        run: sudo apparmor_parser -R /etc/apparmor.d/unix-chkpwd
+
       - name: Checkout repository
         uses: actions/checkout@v5
         with:

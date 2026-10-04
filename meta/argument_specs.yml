@@ -1,26 +1,26 @@
 ---
-# role: samba_ad_objects
+# role: samba_ad
 # file: meta/argument_specs.yml
 
 argument_specs:
   main:
     short_description: Manage directory objects in an existing Samba AD domain.
     options:
-      samba_ad_objects_server:
+      samba_ad_server:
         type: str
         required: true
         description: DNS hostname of the existing Samba AD domain controller.
-      samba_ad_objects_realm:
+      samba_ad_realm:
         type: str
         required: true
         description: Kerberos realm of the existing domain.
-      samba_ad_objects_admin_password:
+      samba_ad_admin_password:
         type: str
         required: true
         no_log: true
         description: Administrator password for directory operations, supplied through a
           secret store.
-      samba_ad_objects_dns_reserved_names:
+      samba_ad_dns_reserved_names:
         type: list
         elements: str
         default:
@@ -28,7 +28,7 @@ argument_specs:
           - isatap
         description: DNS names reserved with administrator-owned loopback A records; an
           empty list stops management.
-      samba_ad_objects_ous:
+      samba_ad_ous:
         type: list
         elements: dict
         default: []
@@ -53,7 +53,7 @@ argument_specs:
               - present
               - absent
             description: Whether the object exists; absent explicitly deletes it.
-      samba_ad_objects_users:
+      samba_ad_users:
         type: list
         elements: dict
         default: []
@@ -107,7 +107,7 @@ argument_specs:
             choices:
               - on_create
               - always
-            description: Override samba_ad_objects_user_update_password for this account.
+            description: Override samba_ad_user_update_password for this account.
           path:
             type: str
             description: Parent container DN; must exist before the object is managed.
@@ -118,7 +118,7 @@ argument_specs:
               - present
               - absent
             description: Whether the object exists; absent explicitly deletes it.
-      samba_ad_objects_groups:
+      samba_ad_groups:
         type: list
         elements: dict
         default: []
@@ -157,7 +157,7 @@ argument_specs:
               list is managed.
           members_purge:
             type: bool
-            description: Override samba_ad_objects_group_members_purge for this group.
+            description: Override samba_ad_group_members_purge for this group.
           path:
             type: str
             description: Parent container DN; must exist before the object is managed.
@@ -168,7 +168,7 @@ argument_specs:
               - present
               - absent
             description: Whether the object exists; absent explicitly deletes it.
-      samba_ad_objects_user_update_password:
+      samba_ad_user_update_password:
         type: str
         default: on_create
         choices:
@@ -176,7 +176,7 @@ argument_specs:
           - always
         description: User password update policy; always intentionally changes passwords
           on every run. Overridable per user.
-      samba_ad_objects_group_members_purge:
+      samba_ad_group_members_purge:
         type: bool
         default: false
         description: Remove unlisted group members when members is supplied; overridable

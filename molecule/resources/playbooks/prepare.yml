@@ -1,12 +1,12 @@
 ---
-# role: samba_ad_objects
+# role: samba_ad
 # file: molecule/resources/playbooks/prepare.yml
 
-- name: SAMBA_AD_OBJECTS | Prepare the existing-domain fixture
+- name: SAMBA_AD | Prepare the existing-domain fixture
   hosts: all
   gather_facts: true
   vars:
-    __samba_ad_objects_test_packages:
+    __samba_ad_test_packages:
       Debian:
         - dnsutils
         - krb5-user
@@ -17,35 +17,35 @@
         - bind-utils
         - krb5-client
   tasks:
-    - name: SAMBA_AD_OBJECTS | Refresh Debian package metadata
+    - name: SAMBA_AD | Refresh Debian package metadata
       become: true
       become_user: root
       ansible.builtin.apt:
         update_cache: true
       when: ansible_facts.pkg_mgr == 'apt'
 
-    - name: SAMBA_AD_OBJECTS | Install the domain controller fixture packages
+    - name: SAMBA_AD | Install the domain controller fixture packages
       ansible.builtin.include_role:
         name: samba_ad_dc
         tasks_from: install
 
-    - name: SAMBA_AD_OBJECTS | Fit provisioned identities inside the rootless UID namespace
+    - name: SAMBA_AD | Fit provisioned identities inside the rootless UID namespace
       become: true
       become_user: root
       ansible.builtin.replace:
         path: /usr/share/samba/setup/idmap_init.ldif
-        regexp: "{{ __samba_ad_objects_idmap_bound.regexp }}"
-        replace: "{{ __samba_ad_objects_idmap_bound.value }}"
+        regexp: "{{ __samba_ad_idmap_bound.regexp }}"
+        replace: "{{ __samba_ad_idmap_bound.value }}"
       loop:
         - regexp: '^lowerBound: .*'
           value: 'lowerBound: 10000'
         - regexp: '^upperBound: .*'
           value: 'upperBound: 60000'
       loop_control:
-        loop_var: __samba_ad_objects_idmap_bound
-        label: "{{ __samba_ad_objects_idmap_bound.value }}"
+        loop_var: __samba_ad_idmap_bound
+        label: "{{ __samba_ad_idmap_bound.value }}"
 
-    - name: SAMBA_AD_OBJECTS | Resolve the DC to its test address
+    - name: SAMBA_AD | Resolve the DC to its test address
       become: true
       become_user: root
       ansible.builtin.lineinfile:
@@ -55,10 +55,10 @@
           {{ ansible_facts.default_ipv4.address }} dc1.ad.example.test dc1
         unsafe_writes: true
 
-    - name: SAMBA_AD_OBJECTS | Discover resolver services in the test image
+    - name: SAMBA_AD | Discover resolver services in the test image
       ansible.builtin.service_facts:
 
-    - name: SAMBA_AD_OBJECTS | Release DNS port 53 in the test instance
+    - name: SAMBA_AD | Release DNS port 53 in the test instance
       become: true
       become_user: root
       ansible.builtin.systemd_service:
@@ -68,20 +68,20 @@
         masked: true
       when: "'systemd-resolved.service' in ansible_facts.services"
 
-    - name: SAMBA_AD_OBJECTS | Provision the domain controller fixture
+    - name: SAMBA_AD | Provision the domain controller fixture
       ansible.builtin.include_role:
         name: samba_ad_dc
 
-    - name: SAMBA_AD_OBJECTS | Install directory test clients
+    - name: SAMBA_AD | Install directory test clients
       become: true
       become_user: root
       ansible.builtin.package:
-        name: '{{ __samba_ad_objects_test_packages[ansible_facts.os_family] }}'
+        name: '{{ __samba_ad_test_packages[ansible_facts.os_family] }}'
         state: present
       environment:
         DEBIAN_FRONTEND: noninteractive
 
-    - name: SAMBA_AD_OBJECTS | Use the local AD DNS service for test clients
+    - name: SAMBA_AD | Use the local AD DNS service for test clients
       become: true
       become_user: root
       ansible.builtin.copy:

@@ -1,30 +1,30 @@
 ---
-# role: samba_ad_objects
+# role: samba_ad
 # file: tasks/groups.yml
 
-- name: SAMBA_AD_OBJECTS | Manage domain groups before resolving memberships
-  jomrr.samba.samba_group: &__samba_ad_objects_group_options
-    name: "{{ __samba_ad_objects_group.name }}"
-    path: "{{ __samba_ad_objects_group.path | default(omit) }}"
-    scope: "{{ __samba_ad_objects_group.scope | default('global') }}"
-    category: "{{ __samba_ad_objects_group.category | default('security') }}"
-    description: "{{ __samba_ad_objects_group.description | default(omit) }}"
-    gid_number: "{{ __samba_ad_objects_group.gid_number | default(omit) }}"
-    state: "{{ __samba_ad_objects_group.state | default('present') }}"
-  loop: "{{ samba_ad_objects_groups }}"
+- name: SAMBA_AD | Manage domain groups before resolving memberships
+  jomrr.samba.samba_group: &__samba_ad_group_options
+    name: "{{ __samba_ad_group.name }}"
+    path: "{{ __samba_ad_group.path | default(omit) }}"
+    scope: "{{ __samba_ad_group.scope | default('global') }}"
+    category: "{{ __samba_ad_group.category | default('security') }}"
+    description: "{{ __samba_ad_group.description | default(omit) }}"
+    gid_number: "{{ __samba_ad_group.gid_number | default(omit) }}"
+    state: "{{ __samba_ad_group.state | default('present') }}"
+  loop: "{{ samba_ad_groups }}"
   loop_control:
-    loop_var: __samba_ad_objects_group
-    label: "{{ __samba_ad_objects_group.name }}"
+    loop_var: __samba_ad_group
+    label: "{{ __samba_ad_group.name }}"
 
-- name: SAMBA_AD_OBJECTS | Manage memberships after all groups exist
+- name: SAMBA_AD | Manage memberships after all groups exist
   jomrr.samba.samba_group:
-    <<: *__samba_ad_objects_group_options
-    members: "{{ __samba_ad_objects_group.members }}"
-    members_purge: "{{ __samba_ad_objects_group.members_purge | default(samba_ad_objects_group_members_purge) }}"
-  loop: "{{ samba_ad_objects_groups }}"
+    <<: *__samba_ad_group_options
+    members: "{{ __samba_ad_group.members }}"
+    members_purge: "{{ __samba_ad_group.members_purge | default(samba_ad_group_members_purge) }}"
+  loop: "{{ samba_ad_groups }}"
   loop_control:
-    loop_var: __samba_ad_objects_group
-    label: "{{ __samba_ad_objects_group.name }}"
+    loop_var: __samba_ad_group
+    label: "{{ __samba_ad_group.name }}"
   when:
-    - (__samba_ad_objects_group.state | default('present')) == 'present'
-    - __samba_ad_objects_group.members is defined
+    - (__samba_ad_group.state | default('present')) == 'present'
+    - __samba_ad_group.members is defined

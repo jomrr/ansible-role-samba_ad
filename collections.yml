@@ -1,5 +1,5 @@
 ---
-# role: samba_ad_objects
+# role: samba_ad
 # file: collections.yml
 
 collections:

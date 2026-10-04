@@ -12,7 +12,7 @@ from ansible_collections.jomrr.samba.plugins.module_utils.samba_conn import (
 )
 
 DOCUMENTATION = r"""
-module: samba_ad_objects_test_directory
+module: samba_ad_test_directory
 short_description: Verify reserved DNS names in the Molecule fixture
 description:
   - Checks the reserved DNS names and refuses authenticated client updates.
@@ -23,12 +23,12 @@ author:
 """
 
 EXAMPLES = r"""
-- name: SAMBA_AD_OBJECTS | Verify DNS reservations and authenticated update restrictions
-  samba_ad_objects_test_directory:
+- name: SAMBA_AD | Verify DNS reservations and authenticated update restrictions
+  samba_ad_test_directory:
     server: dc1.ad.example.test
     realm: AD.EXAMPLE.TEST
     bind_username: Administrator
-    bind_password: "{{ samba_ad_objects_admin_password }}"
+    bind_password: "{{ samba_ad_admin_password }}"
 """
 
 
@@ -71,7 +71,7 @@ def main() -> None:
     module = AnsibleModule(argument_spec=connection_argument_spec())
     try:
         with tempfile.TemporaryDirectory(
-            prefix="samba-ad-objects-tickets-"
+            prefix="samba-ad-tickets-"
         ) as temporary:
             cache = str(Path(temporary) / "ccache")
             ticket(module, "moleculereader", "Molecule-Only-Reader1!", cache)

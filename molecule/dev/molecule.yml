@@ -1,12 +1,12 @@
 ---
-# role: samba_ad_objects
+# role: samba_ad
 # file: molecule/dev/molecule.yml
 
 dependency:
   name: "galaxy"
   options:
     requirements-file: "${MOLECULE_PROJECT_DIRECTORY}/collections.yml"
-    role-file: "${SAMBA_AD_OBJECTS_ROLE_REQUIREMENTS:-molecule/resources/requirements.yml}"
+    role-file: "${SAMBA_AD_ROLE_REQUIREMENTS:-molecule/resources/requirements.yml}"
 driver:
   name: "podman"
 provisioner:
@@ -15,22 +15,18 @@ provisioner:
     defaults:
       forks: 8
       interpreter_python: "auto_silent"
-      allow_world_readable_tmpfiles: true
       callbacks_enabled: "ansible.builtin.default"
       callback_result_format: "yaml"
-      remote_tmp: "/tmp/.ansible/tmp"
-    ssh_connection:
+      display_ok_hosts: false
+      display_skipped_hosts: false
+      show_task_path_on_failure: true
+    connection:
       pipelining: true
-  log: true
-  playbooks:
-    converge: "../resources/playbooks/converge.yml"
-    verify: "../resources/playbooks/verify.yml"
-    prepare: "../resources/playbooks/prepare.yml"
-    side_effect: "../resources/playbooks/side_effect.yml"
   inventory:
     group_vars:
       all:
-        samba_ad_objects_ous:
+        ansible_podman_mount_detection: false
+        samba_ad_ous:
           - name: "Molecule"
             path: "DC=ad,DC=example,DC=test"
           - name: "Staff"
@@ -42,7 +38,7 @@ provisioner:
             path: "OU=Molecule,DC=ad,DC=example,DC=test"
           - name: "Children"
             path: "OU=Retired,OU=Molecule,DC=ad,DC=example,DC=test"
-        samba_ad_objects_users:
+        samba_ad_users:
           - username: "moleculereader"
             password: "Molecule-Only-Reader1!"
           - username: "molecule-managed"
@@ -54,7 +50,7 @@ provisioner:
           - username: "molecule-retired"
             password: "Molecule-Retired-Account1!"
             path: "OU=Children,OU=Retired,OU=Molecule,DC=ad,DC=example,DC=test"
-        samba_ad_objects_groups:
+        samba_ad_groups:
           - name: "molecule-parent-group"
             path: "OU=Groups,OU=Molecule,DC=ad,DC=example,DC=test"
             members:
@@ -79,13 +75,19 @@ provisioner:
             path: "OU=Retired,OU=Molecule,DC=ad,DC=example,DC=test"
             members:
               - "molecule-retired"
-        samba_ad_objects_server: "dc1.ad.example.test"
-        samba_ad_objects_realm: "AD.EXAMPLE.TEST"
-        samba_ad_objects_admin_password: "Molecule-Only-Adm1n!"
+        samba_ad_server: "dc1.ad.example.test"
+        samba_ad_realm: "AD.EXAMPLE.TEST"
+        samba_ad_admin_password: "Molecule-Only-Adm1n!"
         samba_ad_dc_hostname: "dc1"
-        samba_ad_dc_realm: "{{ samba_ad_objects_realm }}"
+        samba_ad_dc_realm: "{{ samba_ad_realm }}"
         samba_ad_dc_domain: "EXAMPLE"
-        samba_ad_dc_admin_password: "{{ samba_ad_objects_admin_password }}"
+        samba_ad_dc_admin_password: "{{ samba_ad_admin_password }}"
+  log: true
+  playbooks:
+    prepare: "../resources/playbooks/prepare.yml"
+    converge: "../resources/playbooks/converge.yml"
+    verify: "../resources/playbooks/verify.yml"
+    side_effect: "../resources/playbooks/side_effect.yml"
   connection_options:
     ansible_user: "molecule"
 verifier:
@@ -105,7 +107,7 @@ scenario:
     - "destroy"
   name: "dev"
 platforms:
-  - name: "samba-ad-objects-almalinux"
+  - name: "samba-ad-almalinux"
     hostname: "dc1"
     image: "docker.io/jomrr/molecule-almalinux:latest"
     pre_build_image: true
@@ -114,7 +116,7 @@ platforms:
     privileged: true
     extra_opts:
       - "--tmpfs=/var/lib/samba:rw,size=1g,mode=0755"
-  - name: "samba-ad-objects-debian"
+  - name: "samba-ad-debian"
     hostname: "dc1"
     image: "docker.io/jomrr/molecule-debian:latest"
     pre_build_image: true
@@ -123,7 +125,7 @@ platforms:
     privileged: true
     extra_opts:
       - "--tmpfs=/var/lib/samba:rw,size=1g,mode=0755"
-  - name: "samba-ad-objects-fedora"
+  - name: "samba-ad-fedora"
     hostname: "dc1"
     image: "docker.io/jomrr/molecule-fedora:latest"
     pre_build_image: true
@@ -132,7 +134,7 @@ platforms:
     privileged: true
     extra_opts:
       - "--tmpfs=/var/lib/samba:rw,size=1g,mode=0755"
-  - name: "samba-ad-objects-suse"
+  - name: "samba-ad-suse"
     hostname: "dc1"
     image: "docker.io/jomrr/molecule-opensuse-tumbleweed:latest"
     pre_build_image: true
@@ -141,7 +143,7 @@ platforms:
     privileged: true
     extra_opts:
       - "--tmpfs=/var/lib/samba:rw,size=1g,mode=0755"
-  - name: "samba-ad-objects-ubuntu"
+  - name: "samba-ad-ubuntu"
     hostname: "dc1"
     image: "docker.io/jomrr/molecule-ubuntu:latest"
     pre_build_image: true

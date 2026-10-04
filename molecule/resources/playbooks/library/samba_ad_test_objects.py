@@ -12,7 +12,7 @@ from ansible_collections.jomrr.samba.plugins.module_utils.samba_conn import (
 )
 
 DOCUMENTATION = r"""
-module: samba_ad_objects_test_objects
+module: samba_ad_test_objects
 short_description: Exercise managed objects throughout the Molecule lifecycle
 description:
   - Verifies users, OUs, nested groups and membership policies.
@@ -30,11 +30,11 @@ author:
 """
 
 EXAMPLES = r"""
-- name: SAMBA_AD_OBJECTS | Verify managed directory objects
-  samba_ad_objects_test_objects:
+- name: SAMBA_AD | Verify managed directory objects
+  samba_ad_test_objects:
     server: dc1.ad.example.test
     bind_username: Administrator
-    bind_password: "{{ samba_ad_objects_admin_password }}"
+    bind_password: "{{ samba_ad_admin_password }}"
     phase: initial
 """
 

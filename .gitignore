@@ -1,4 +1,4 @@
-# role: jomrr.samba_ad_objects
+# role: jomrr.samba_ad
 # file: .gitignore
 
 __pycache__/

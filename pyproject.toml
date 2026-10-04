@@ -1,5 +1,5 @@
 [project]
-name = "samba_ad_objects"
+name = "samba_ad"
 version = "0.0.0"
 description = "Ansible role for managing Samba AD users, groups, organizational units, and DNS reservations."
 requires-python = ">=3.12"
@@ -10,7 +10,7 @@ license = "MIT"
 keywords = ["samba", "activedirectory", "users", "groups", "ldap"]
 
 [project.urls]
-Repository = "https://github.com/jomrr/ansible-role-samba_ad_objects"
+Repository = "https://github.com/jomrr/ansible-role-samba_ad"
 
 [tool.uv]
 package = false
