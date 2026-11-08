@@ -95,6 +95,8 @@ provisioner:
             password: "Molecule-Managed-Account1!"
             path: "OU=Staff,OU=Molecule,DC=ad,DC=example,DC=test"
             display_name: "Initial managed user"
+            home_directory: "\\\\fs1.ad.example.test\\homes\\molecule-managed"
+            home_drive: "H:"
             uid_number: 21001
             gid_number: 21000
           - username: "molecule-retired"

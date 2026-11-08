@@ -43,6 +43,8 @@ ATTRIBUTES = [
     "displayName",
     "description",
     "member",
+    "homeDirectory",
+    "homeDrive",
     "uidNumber",
     "gidNumber",
     "groupType",
@@ -98,6 +100,8 @@ class DirectoryChecks:
             managed, "distinguishedName", [f"CN=molecule-managed,OU=Staff,{self.root}"]
         )
         expect(managed, "displayName", ["Initial managed user"])
+        expect(managed, "homeDirectory", [r"\\fs1.ad.example.test\homes\molecule-managed"])
+        expect(managed, "homeDrive", ["H:"])
         expect(managed, "uidNumber", ["21001"])
         expect(managed, "gidNumber", ["21000"])
         expect(self.read(f"OU=Staff,{self.root}"), "description", ["Initial staff OU"])
@@ -119,6 +123,8 @@ class DirectoryChecks:
         reader = self.account("moleculereader")
         expect(managed, "distinguishedName", [f"CN=molecule-managed,{self.root}"])
         expect(managed, "displayName", ["Updated managed user"])
+        expect(managed, "homeDirectory", [r"\\fs2.ad.example.test\homes\molecule-managed"])
+        expect(managed, "homeDrive", ["U:"])
         if not int(managed["userAccountControl"][0]) & 2:
             raise RuntimeError("The managed account was not disabled")
         group = self.account("molecule-managed-group")

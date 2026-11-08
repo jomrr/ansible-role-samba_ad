@@ -171,6 +171,13 @@ argument_specs:
           description:
             type: str
             description: Directory object description; omitted leaves it unchanged.
+          home_directory:
+            type: str
+            description: Windows home folder (homeDirectory); omitted leaves it unchanged.
+          home_drive:
+            type: str
+            description: Drive letter for a UNC home folder (homeDrive), for example H:;
+              omitted leaves it unchanged.
           uid_number:
             type: int
             description: RFC2307 user ID.

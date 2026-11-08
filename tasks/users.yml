@@ -11,6 +11,8 @@
     display_name: "{{ __samba_ad_user.display_name | default(omit) }}"
     email: "{{ __samba_ad_user.email | default(omit) }}"
     description: "{{ __samba_ad_user.description | default(omit) }}"
+    home_directory: "{{ __samba_ad_user.home_directory | default(omit) }}"
+    home_drive: "{{ __samba_ad_user.home_drive | default(omit) }}"
     uid_number: "{{ __samba_ad_user.uid_number | default(omit) }}"
     gid_number: "{{ __samba_ad_user.gid_number | default(omit) }}"
     unix_home_directory: "{{ __samba_ad_user.unix_home_directory | default(omit) }}"

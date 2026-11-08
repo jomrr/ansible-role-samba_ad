@@ -33,7 +33,8 @@ zones, and static records.
 - Administrator credentials supplied through Ansible Vault or another secret
   store.
 - RFC2307 enabled in the domain when managing POSIX attributes.
-- jomrr.samba >=2.1.0 for zone aging options and record TTL management.
+- jomrr.samba >=2.4.0 for Windows home folder and drive attributes, zone aging
+  options, and record TTL management.
 
 ## Dependencies
 
@@ -42,7 +43,7 @@ collections:
   - name: community.general
     version: '>=12.0.0'
   - name: jomrr.samba
-    version: '>=2.1.0'
+    version: '>=2.4.0'
 ```
 
 ## Role Variables
@@ -221,6 +222,13 @@ together.
   unchanged when omitted, except enabled, scope, category, and location, which
   use the documented module defaults. Omitted path places or moves users and
   groups to the default Users container.
+- User entries support `home_directory` (LDAP `homeDirectory`) and `home_drive`
+  (LDAP `homeDrive`) as optional strings. A UNC `home_directory` such as
+  `\\fs1.ad.example.com\homes\jdoe` is connected as `home_drive` (for example
+  `H:`) at logon. Omitted fields leave existing attributes unchanged.
+  `unix_home_directory` manages the separate RFC2307 `unixHomeDirectory`
+  attribute. The role sets directory attributes; it does not create folders or
+  shares.
 
 ## Supported Platforms
 
@@ -323,6 +331,8 @@ samba_ad_users:
     path: OU=Engineering,OU=Staff,DC=ad,DC=example,DC=com
     given_name: Jane
     surname: Doe
+    home_directory: '\\fs1.ad.example.com\homes\jdoe'
+    home_drive: 'H:'
     password: "{{ vault_jdoe_password }}"
 samba_ad_groups:
   - name: engineers

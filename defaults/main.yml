@@ -86,6 +86,8 @@ samba_ad_users: []
 #     display_name: Jane Doe  # Display name (displayName).
 #     email: jane.doe@example.com  # Email address (mail).
 #     description: Engineering account  # LDAP description.
+#     home_directory: '\\fs1.ad.example.com\homes\jdoe'  # Windows homeDirectory; omitted leaves it unchanged.
+#     home_drive: 'H:'  # Windows homeDrive for a UNC home folder; omitted leaves it unchanged.
 #     uid_number: 10001  # Integer POSIX user ID (uidNumber).
 #     gid_number: 10000  # Integer POSIX primary group ID (gidNumber).
 #     unix_home_directory: /home/jdoe  # POSIX home directory (unixHomeDirectory).

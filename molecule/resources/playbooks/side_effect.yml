@@ -79,6 +79,8 @@
           - username: molecule-managed
             path: OU=Molecule,DC=ad,DC=example,DC=test
             display_name: Updated managed user
+            home_directory: '\\fs2.ad.example.test\homes\molecule-managed'
+            home_drive: 'U:'
             enabled: false
           - username: molecule-retired
             state: absent
